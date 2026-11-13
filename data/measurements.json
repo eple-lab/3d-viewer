@@ -1,0 +1,55 @@
+{
+  "video": {
+    "name": "watch.mp4",
+    "width": 1920,
+    "height": 1080,
+    "duration_s": 16.215,
+    "source_fps": 29.97,
+    "frames_extracted": 24
+  },
+  "frames": {
+    "sharpness_median": 8.74,
+    "sharpness_min": 3.55,
+    "sharpness_max": 13.67,
+    "blurry_frames": [
+      13
+    ]
+  },
+  "recon": {
+    "model": "facebook/map-anything-apache",
+    "amp_dtype": "fp16",
+    "seconds": 9.1,
+    "peak_gpu_gb": 11.99,
+    "points_raw": 3578759,
+    "points_kept": 3496815,
+    "camera_spread": 4.3219,
+    "scene_diagonal": 3.9724,
+    "spread_ratio": 1.088
+  },
+  "splat": {
+    "count": 3496815,
+    "K": 1.4,
+    "radius": 0.00181,
+    "extent": 2.4179,
+    "ply_bytes": 237783837,
+    "bytes_per_gaussian": 68.0,
+    "header_properties": 17
+  },
+  "formats": {
+    "ply": 237783837,
+    "splat": 111898080,
+    "compressed.ply": 56933222,
+    "sog": 17465699
+  },
+  "sog": {
+    "bytes": 17465699,
+    "megabytes_1e6": 17.47,
+    "mebibytes": 16.66,
+    "ratio_vs_ply": 13.6
+  },
+  "env": {
+    "gpu": "Tesla T4",
+    "vram_gb": 15.6,
+    "compute_capability": "7.5"
+  }
+}

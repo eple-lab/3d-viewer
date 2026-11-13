@@ -77,12 +77,12 @@ assert torch.cuda.is_available(), (
     "런타임 → 런타임 유형 변경 → 하드웨어 가속기 'T4 GPU' 로 바꾸고\n"
     "런타임 → 런타임 다시 시작 후 이 셀부터 다시 실행하십시오.")
 
-p   = torch.cuda.get_device_properties(0)
-cap = torch.cuda.get_device_capability()
-print(f"GPU        {p.name}")
-print(f"메모리      {p.total_memory/1e9:.1f} GB")
-print(f"계산 능력   {cap[0]}.{cap[1]}")
-print(f"bfloat16   {'지원' if cap[0] >= 8 else '미지원 → fp16 을 써야 합니다'}")
+gpu = torch.cuda.get_device_properties(0)
+cc  = torch.cuda.get_device_capability()
+print(f"GPU        {gpu.name}")
+print(f"메모리      {gpu.total_memory/1e9:.1f} GB")
+print(f"계산 능력   {cc[0]}.{cc[1]}")
+print(f"bfloat16   {'지원' if cc[0] >= 8 else '미지원 → fp16 을 써야 합니다'}")
 print(f"torch      {torch.__version__}")
 """)
 
@@ -275,9 +275,9 @@ rows = int(np.ceil(len(paths) / cols))
 fig, axes = plt.subplots(rows, cols, figsize=(cols * 3.2, rows * 1.9))
 for ax in axes.ravel():
     ax.axis('off')
-for ax, p, s in zip(axes.ravel(), paths, scores):
-    ax.imshow(Image.open(p))
-    ax.set_title(f"{os.path.basename(p)[2:5]} · {s:.1f}", fontsize=8)
+for ax, pth, s in zip(axes.ravel(), paths, scores):
+    ax.imshow(Image.open(pth))
+    ax.set_title(f"{os.path.basename(pth)[2:5]} · {s:.1f}", fontsize=8)
 plt.tight_layout()
 plt.show()
 """)
@@ -675,13 +675,13 @@ measurements = {
     "sog": {
         "bytes": int(SOG_BYTES),
         "megabytes_1e6": round(SOG_BYTES / 1e6, 2),
-        "megabytes_2_20": round(SOG_BYTES / 1048576, 2),
+        "mebibytes": round(SOG_BYTES / 1048576, 2),
         "ratio_vs_ply": round(PLY_BYTES / SOG_BYTES, 1),
     },
     "env": {
-        "gpu": p.name,
-        "vram_gb": round(p.total_memory / 1e9, 1),
-        "compute_capability": f"{cap[0]}.{cap[1]}",
+        "gpu": gpu.name,
+        "vram_gb": round(gpu.total_memory / 1e9, 1),
+        "compute_capability": f"{cc[0]}.{cc[1]}",
     },
 }
 

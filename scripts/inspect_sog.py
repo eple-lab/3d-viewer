@@ -13,6 +13,12 @@ import os
 import sys
 import zipfile
 
+# 윈도우 콘솔은 cp949 라 한글·특수문자에서 죽는다. UTF-8 로 바꾼다.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 
 def main(path: str) -> int:
     if not os.path.exists(path):
@@ -51,7 +57,7 @@ def main(path: str) -> int:
         if count:
             print(f"\n알갱이 수        {count:,}")
             print(f"알갱이당 바이트   {size/count:.2f} B")
-            print(f"  (.ply 였다면   {count*68/1e6:.1f} MB — 68B/개 기준)")
+            print(f"  (.ply 였다면   {count*68/1e6:.1f} MB - 68B/개 기준)")
             print(f"  압축 배수      {count*68/size:.1f}배")
         else:
             print("\nmeta.json 에서 count 를 못 찾았습니다. 키를 직접 보십시오.")
