@@ -59,6 +59,9 @@ for i, cell in enumerate(nb["cells"]):
     src = transform("".join(cell["source"]))
     if not src.strip():
         continue
+    if "create_from_point_cloud_poisson" in src:
+        print(f"\n[셀 {i}] 부록(메시)은 이번 제출에 쓰지 않으므로 건너뛴다", flush=True)
+        continue
     print(f"\n{'='*66}\n[셀 {i}] ({time.time()-T0:.0f}초 경과)\n{'='*66}", flush=True)
     try:
         exec(compile(src, f"<cell {i}>", "exec"), G)

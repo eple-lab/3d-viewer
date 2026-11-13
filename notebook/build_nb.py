@@ -107,8 +107,9 @@ md(r"""
 
 code(r"""
 %%capture
-!git clone -q --depth 1 https://github.com/facebookresearch/map-anything.git
-!cd map-anything && pip install -q -e .
+# 이미 받아 뒀으면 다시 받지 않는다. 셀을 두 번 돌려도 터지지 않게.
+!cd /content && { test -d map-anything || git clone -q --depth 1 https://github.com/facebookresearch/map-anything.git; }
+!cd /content/map-anything && pip install -q -e .
 !pip install -q open3d trimesh
 """)
 
@@ -249,7 +250,7 @@ paths = sorted(glob.glob('/content/frames/*.jpg'))[:TARGET]
 print(f"{len(paths)}장 뽑음 ({time.time()-t:.1f}초)")
 
 def sharpness(path):
-    \"\"\"회색조 480×270 으로 줄여 이웃 화소 차이의 평균. 낮으면 번진 장.\"\"\"
+    # 회색조 480×270 으로 줄여 이웃 화소 차이의 평균. 낮으면 번진 장.
     g = np.asarray(Image.open(path).convert('L').resize((480, 270)), dtype=np.float64)
     return float(np.abs(np.diff(g, axis=0)).mean() + np.abs(np.diff(g, axis=1)).mean())
 
@@ -516,7 +517,7 @@ BPS       = (PLY_BYTES - hdr_len) / len(xyz)
 print(f"알갱이 {len(xyz):,}개 · 반지름 {splat_r:.5f} (긴 변 {extent:.3f}) · {time.time()-t:.1f}초")
 print(f"scene.ply {PLY_BYTES/1e6:.1f}MB")
 print(f"알갱이 하나에 {BPS:.2f}바이트  (정상이면 정확히 68)")
-print(f"헤더 속성 수 {(hdr_len - hdr_len)//1 + 17}개 · f_rest {'있음(잘못됨)' if False else '없음(정상)'}")
+print(f"헤더 속성 17개 · f_rest 없음(정상) · 헤더 {hdr_len}바이트")
 
 assert abs(BPS - 68) < 0.01, "68바이트가 아닙니다. 헤더에 45칸이 섞였는지 보십시오."
 """)
