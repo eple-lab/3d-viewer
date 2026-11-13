@@ -54,12 +54,18 @@ def main():
     os.makedirs(SHOTS, exist_ok=True)
 
     # ── 대표 화면 ────────────────────────────────────────────────
-    hero = content_crop(load("h060.jpg"), 40)
+    # live060 은 배포된 주소(https://eple-lab.github.io/3d-viewer/)에서 찍은 것이다.
+    hero = content_crop(load("live060.jpg"), 40)
     hero.thumbnail((1200, 900), Image.LANCZOS)
     hero.save(os.path.join(SHOTS, "viewer.jpg"), quality=90, optimize=True)
     print("viewer.jpg", hero.size)
 
     # ── 앞 / 뒤 비교 ─────────────────────────────────────────────
+    if not (os.path.exists(os.path.join(RAW, "h060.jpg")) and
+            os.path.exists(os.path.join(RAW, "b135.jpg"))):
+        print("coverage.jpg 는 _raw 에 h060/b135 가 있어야 다시 만든다 (건너뜀)")
+        return
+
     # 같은 카메라 거리로 찍었으므로 같은 사각형을 잘라야 자리가 맞는다.
     box = (0.06, 0.03, 0.82, 0.97)
 

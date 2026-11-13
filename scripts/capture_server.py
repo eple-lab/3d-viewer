@@ -16,7 +16,8 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "shots")
+OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                   "shots", "_raw")
 
 
 class Handler(BaseHTTPRequestHandler):
