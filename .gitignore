@@ -1,0 +1,14 @@
+# 실행 산출물 (노트북이 만드는 중간 파일)
+data/frames/
+*.npy
+
+# 로컬 도구
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
