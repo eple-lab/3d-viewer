@@ -1,0 +1,16 @@
+# 줄바꿈을 저장소에서 고정한다. 윈도우에서 열어도 diff 가 깨지지 않게.
+* text=auto eol=lf
+
+*.html   text eol=lf
+*.md     text eol=lf
+*.py     text eol=lf
+*.ipynb  text eol=lf
+*.json   text eol=lf
+
+# 손대지 않는 바이너리
+*.mp4    binary
+*.sog    binary
+*.ply    binary
+*.png    binary
+*.jpg    binary
+*.glb    binary
