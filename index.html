@@ -70,7 +70,8 @@
   #stats table{width:100%;border-collapse:collapse}
   #stats td{padding:1.5px 0;vertical-align:top}
   #stats td:first-child{color:var(--dim);white-space:nowrap;padding-right:10px}
-  #stats td:last-child{text-align:right}
+  #stats td:last-child{text-align:right;max-width:200px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
 
   /* ── 막혔을 때 ───────────────────────────────────── */
   #trap{left:12px;bottom:12px;width:min(430px,calc(100vw - 24px));display:none;
@@ -138,6 +139,7 @@
     <tr><td>알갱이당 바이트</td><td id="m-bps">-</td></tr>
     <tr><td>장면 지름</td><td id="m-radius">-</td></tr>
     <tr><td>화면 갱신</td><td id="m-fps">-</td></tr>
+    <tr><td>GPU</td><td id="m-gpu">-</td></tr>
   </table>
 </div>
 
@@ -208,6 +210,29 @@ function fail(msg) {
   f.innerHTML = "<b>막혔습니다</b>\n" + msg;
   if (matchMedia("(min-width:641px)").matches) $("trap").classList.add("show");
 }
+
+/* 기기 정보 — 폰에서 까맣게 나올 때 원인을 좁히는 데 쓴다. */
+function deviceInfo() {
+  const lines = [];
+  try {
+    const gl  = renderer.getContext();
+    const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+    const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    lines.push("GPU      " + String(gpu).slice(0, 90));
+    lines.push("WebGL    " + (gl instanceof WebGL2RenderingContext ? "2" : "1"));
+    lines.push("텍스처   " + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+    lines.push("컨텍스트 " + (gl.isContextLost() ? "손실" : "정상"));
+    lines.push("알갱이   " + (count ? count.toLocaleString("ko-KR") : "0"));
+  } catch (e) {
+    lines.push("GPU 정보를 못 읽었습니다: " + (e?.message ?? e));
+  }
+  lines.push("화면     " + innerWidth + "×" + innerHeight +
+             " @" + (devicePixelRatio || 1).toFixed(1) + "x");
+  lines.push("메모리   " + (navigator.deviceMemory ? navigator.deviceMemory + "GB" : "?") +
+             " · 코어 " + (navigator.hardwareConcurrency || "?"));
+  return lines.join("\n");
+}
+
 addEventListener("error", e => fail("자바스크립트 오류: " + (e?.message ?? String(e))));
 addEventListener("unhandledrejection", e =>
   fail("처리 못 한 실패: " + (e?.reason?.message || e?.reason)));
@@ -232,9 +257,20 @@ try {
 
 /* ── 2. 장면과 렌더러 ──────────────────────────────────────────── */
 const canvas   = $("c");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false,
+                                           powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 renderer.setClearColor(0x0b0f14, 1);
+
+/* 컨텍스트를 잃으면 아무 말 없이 까매진다. 폰에서 흔하다.
+   최소한 이유를 화면에 적어 준다. */
+canvas.addEventListener("webglcontextlost", e => {
+  e.preventDefault();
+  fail("GPU 가 그리기를 멈췄습니다 (WebGL 컨텍스트 손실).\n" +
+       "메모리가 부족할 때 자주 납니다.\n" +
+       "1. 다른 탭을 닫고 새로 고침\n" +
+       "2. 그래도 안 되면 아래 값을 알려 주십시오.\n\n" + deviceInfo());
+}, false);
 
 const scene  = new THREE.Scene();
 scene.background = new THREE.Color(0x0b0f14);
@@ -259,12 +295,24 @@ if (SPARK.SparkRenderer) {
 }
 
 function resize() {
-  const w = innerWidth, h = innerHeight;
+  // 폰에서는 로드 중 innerHeight 가 0 으로 잡히는 경우가 있다.
+  // 0 으로 나누면 aspect 가 Infinity 가 되고 화면이 통째로 까매진다.
+  const w = Math.max(1, Math.round(innerWidth));
+  const h = Math.max(1, Math.round(innerHeight));
+  // 폰은 화소 밀도가 3~4 라 그대로 두면 채우기 비용이 4~9배가 된다.
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, w < 700 ? 1.5 : 2));
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
+  return { w, h };
 }
 addEventListener("resize", resize);
+addEventListener("orientationchange", () => setTimeout(resize, 120));
+
+/* 폰은 주소창이 접히고 펴지면서 창 크기가 계속 바뀐다. resize 만 믿으면
+   가로·세로를 바꾼 뒤 캔버스가 잘린 채로 남는다. 상자를 직접 관찰한다. */
+if (window.ResizeObserver) new ResizeObserver(() => resize()).observe(document.body);
+
 resize();
 
 /* ── 3. 파일 받기 ──────────────────────────────────────────────── */
@@ -389,6 +437,14 @@ function fit() {
   setStep("s5", "ok");
   $("s5").textContent = `카메라 놓기 · 지름 ${(radius * 2).toFixed(3)}`;
   $("m-radius").textContent = (radius * 2).toFixed(3);
+  try {
+    const gl  = renderer.getContext();
+    const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+    const gpu = String((dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)
+                            : gl.getParameter(gl.RENDERER)) || "-");
+    $("m-gpu").textContent = gpu.replace(/\s*\(.*$/, "").slice(0, 30);
+    $("m-gpu").title = gpu;
+  } catch { $("m-gpu").textContent = "-"; }
   $("stats").classList.add("show");
   bar(100);
 
@@ -427,9 +483,37 @@ addEventListener("keydown", e => {
 });
 
 /* ── 화면 갱신 ─────────────────────────────────────────────────── */
+/* 폰에서 "다 올라갔는데 까만 화면"을 잡기 위한 검사.
+   그린 직후에만 캔버스를 복사할 수 있으므로 루프 안에서 한다. */
 let frames = 0, fpsT0 = performance.now();
+let blanks = 0, checked = 0, drawnAt = 0;
+
+function isBlank() {
+  try {
+    const n = 48;
+    const c2 = document.createElement("canvas");
+    c2.width = c2.height = n;
+    const x2 = c2.getContext("2d", { willReadFrequently: true });
+    x2.drawImage(canvas, 0, 0, n, n);
+    const d = x2.getImageData(0, 0, n, n).data;
+    for (let i = 0; i < d.length; i += 4) {
+      // 배경색 0x0b0f14 과 4 이상 차이나는 화소가 하나라도 있으면 그려진 것
+      if (Math.abs(d[i] - 11) > 4 || Math.abs(d[i + 1] - 15) > 4 || Math.abs(d[i + 2] - 20) > 4)
+        return false;
+    }
+    return true;
+  } catch {
+    return false;   // 검사 자체가 안 되면 판단하지 않는다
+  }
+}
+
 function loop() {
   requestAnimationFrame(loop);
+
+  // 창 크기가 바뀌었는데 resize 를 못 받은 경우를 여기서 잡는다
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  if (cw && ch && (Math.abs(camera.aspect - cw / ch) > 1e-3)) resize();
+
   controls.update();
   renderer.render(scene, camera);
 
@@ -438,6 +522,19 @@ function loop() {
   if (now - fpsT0 >= 1000) {
     $("m-fps").textContent = `${Math.round(frames * 1000 / (now - fpsT0))} fps`;
     frames = 0; fpsT0 = now;
+  }
+
+  if (count && now - drawnAt > 2000 && checked < 3) {
+    if (!isBlank()) { checked = 3; return; }
+    blanks++;
+    checked++;
+    drawnAt = now;
+    if (checked === 3) {
+      fail("알갱이 " + count.toLocaleString("ko-KR") + "개는 올라갔는데 화면에 하나도 안 그려졌습니다.\n" +
+           "이 기기의 GPU 가 감당하지 못하는 것으로 보입니다.\n\n" +
+           "1. 다른 탭을 닫고 새로 고침\n" +
+           "2. 그래도 안 되면 아래 값을 알려 주십시오.\n\n" + deviceInfo());
+    }
   }
 }
 loop();
