@@ -57,11 +57,18 @@
 │
 ├── shots/
 │   ├── contact-sheet.jpg      ← 뽑은 24장 한눈에 보기
-│   └── viewer.png             ← 폰/데스크톱 화면 캡처
+│   ├── viewer.jpg             ← 배포된 주소에서 찍은 화면
+│   └── coverage.jpg           ← 앞 / 135° 비교 (한계 설명용)
 │
 └── scripts/
     ├── serve.ps1              ← 로컬 미리보기 서버
-    └── inspect_sog.py         ← .sog 를 열어 알갱이 수·바이트 검사
+    ├── inspect_sog.py         ← .sog 를 열어 알갱이 수·바이트 검사
+    ├── capture_server.py      ← 캔버스를 파일로 받는 작은 서버 (그림 만들 때)
+    ├── make_figures.py        ← 캡처를 잘라 README 그림으로
+    ├── colab.sh               ← WSL 의 colab CLI 래퍼
+    ├── wsl-setup.sh           ← WSL 에 uv·colab CLI 설치
+    ├── wsl-keyring.sh         ← 키링 없는 WSL 에 keyrings.alt 넣기
+    └── run_notebook.py        ← 노트북 셀을 그대로 exec 해서 무인 실행
 ```
 
 **왜 `index.html` 하나에 다 넣었나**: 심사자가 npm 을 돌리지 않는다. 빌드 도구가
