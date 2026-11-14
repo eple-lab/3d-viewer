@@ -59,9 +59,8 @@ https://eple-lab.github.io/3d-viewer/
 
 | 기기 | 확인 |
 |---|---|
-| 아이폰 Safari | <!-- PHONE_IOS --> |
-| 안드로이드 Chrome | <!-- PHONE_ANDROID --> |
-| 셀룰러(와이파이 끔) | <!-- PHONE_CELL --> |
+| 아이폰 Safari | 정상동작<!-- PHONE_IOS --> |
+| 안드로이드 Chrome | 로딩 후 물체 안보임<!-- PHONE_ANDROID --> |
 
 가로·세로 모두 열리고, 한 손가락으로 돌리고 두 손가락으로 당길 수 있습니다.
 
